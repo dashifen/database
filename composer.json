@@ -9,14 +9,21 @@
 			"role": "developer"
 		}
 	],
-	"keywords": [ "database", "pdo", "aura", "auraphp" ],
+	"keywords": [
+		"database",
+		"pdo",
+		"aura",
+		"auraphp"
+	],
 	"version": "0.0.1",
 	"license": "MIT",
 	"require": {
 		"aura/sql": ">=3.0.0-alpha1"
 	},
 	"autoload": {
-		"Aura\\Sql\\": "vendor/aura/sql/",
-		"Dashifen\\Database": "src/"
+		"psr-4": {
+			"Aura\\Sql\\": "vendor/aura/sql/",
+			"Dashifen\\Database": "src/"
+		}
 	}
 }
