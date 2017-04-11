@@ -1,5 +1,5 @@
 {
-	"name": "Dashifen/Database",
+	"name": "dashifen/database",
 	"description": "A wrapper around the extended PDO object from Aura/SQL using the interface that Dash prefers.",
 	"authors": [
 		{
@@ -9,7 +9,7 @@
 			"role": "developer"
 		}
 	],
-	"keywords": [ "database" ],
+	"keywords": [ "database", "pdo", "aura", "auraphp" ],
 	"version": "0.0.1",
 	"license": "MIT",
 	"require": {
