@@ -15,7 +15,7 @@
 		"aura",
 		"auraphp"
 	],
-	"version": "0.0.1",
+	"version": "1.0.0-beta",
 	"license": "MIT",
 	"require": {
 		"aura/sql": ">=3.0.0-alpha1"
