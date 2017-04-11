@@ -1,0 +1,22 @@
+{
+	"name": "Dashifen/Database",
+	"description": "A wrapper around the extended PDO object from Aura/SQL using the interface that Dash prefers.",
+	"authors": [
+		{
+			"name": "David Dashifen Kees",
+			"email": "dashifen@dashifen.com",
+			"homepage": "https://dashifen.com",
+			"role": "developer"
+		}
+	],
+	"keywords": [ "database" ],
+	"version": "0.0.1",
+	"license": "MIT",
+	"require": {
+		"aura/sql": ">=3.0.0-alpha1"
+	},
+	"autoload": {
+		"Aura\\Sql\\": "vendor/aura/sql/",
+		"Dashifen\\Database": "src/"
+	}
+}
