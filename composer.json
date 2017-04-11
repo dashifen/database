@@ -23,7 +23,7 @@
 	"autoload": {
 		"psr-4": {
 			"Aura\\Sql\\": "vendor/aura/sql/",
-			"Dashifen\\Database": "src/"
+			"Dashifen\\Database\\": "src/"
 		}
 	}
 }
