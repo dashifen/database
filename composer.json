@@ -15,14 +15,13 @@
 		"aura",
 		"auraphp"
 	],
-	"version": "1.0.0-beta",
+	"version": "1.0.1-beta",
 	"license": "MIT",
 	"require": {
 		"aura/sql": ">=3.0.0-alpha1"
 	},
 	"autoload": {
 		"psr-4": {
-			"Aura\\Sql\\": "vendor/aura/sql/",
 			"Dashifen\\Database\\": "src/"
 		}
 	}

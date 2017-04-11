@@ -3,7 +3,6 @@
 namespace Dashifen\Database\MySQL;
 
 use Dashifen\Database\AbstractDatabase;
-use Dashifen\Database\DatabaseException;
 
 /**
  * Class MysqlDatabase
