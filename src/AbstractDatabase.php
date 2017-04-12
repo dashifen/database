@@ -443,7 +443,7 @@ abstract class AbstractDatabase implements DatabaseInterface {
 	 */
 	protected function placeholders(int $count, string $placeholder = '?', bool $surround = true): string {
 		$temp = join(", ", array_pad([], $count, $placeholder));
-		return $surround ? "($temp)" : false;
+		return $surround ? "($temp)" : $temp;
 	}
 	
 	/**
