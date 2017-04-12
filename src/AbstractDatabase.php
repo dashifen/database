@@ -180,22 +180,18 @@ abstract class AbstractDatabase implements DatabaseInterface {
 		$columns = array_keys($values[0]);
 		if ($this->verifyColumns($columns, $values)) {
 			
-			// now, we want to build our query.  PDO doesn't have a "clean" way to
-			// insert multiple rows because of the need for bound parameters.  so,
-			// we need to build a single giant array of $values that we use within
-			// a similarly giant INSERT statement.
-			
-			$table = $this->escapeName($table);
-			$columns = join(", ", $this->escapeNames($columns));
-			
 			// now, we need a separate parenthetical $values statement for each of our
 			// $values.  then, we need to merge those parenthetical statements into a
 			// series of them.  e.g., if we're inserting sets of two columns, this'll
 			// make (?,?), (?,?), (?,?)... for us.
 			
 			$parenthetical  = $this->placeholders(sizeof($columns));
-			$parentheticals = $this->placeholders(sizeof($values), $parenthetical);
+			$parentheticals = $this->placeholders(sizeof($values), $parenthetical, false);
+			$columns = join(", ", $this->escapeNames($columns));
+			$table = $this->escapeName($table);
+			
 			$statement = "INSERT INTO $table ($columns) VALUES $parentheticals";
+			
 			return $this->insertExecute($statement, $this->mergeBindings($values));
 		}
 		
@@ -445,8 +441,9 @@ abstract class AbstractDatabase implements DatabaseInterface {
 	 * returns a string appropriate for use within a statement as the placeholders
 	 * for a series of bound values.  e.g., for a count of 3, returns (?, ?, ?).
 	 */
-	protected function placeholders(int $count, string $placeholder = '?'): string {
-		return "(" . join(", ", array_pad([], $count, $placeholder)) . ")";
+	protected function placeholders(int $count, string $placeholder = '?', bool $surround = true): string {
+		$temp = join(", ", array_pad([], $count, $placeholder));
+		return $surround ? "($temp)" : false;
 	}
 	
 	/**
