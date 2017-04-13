@@ -16,21 +16,6 @@ interface DatabaseInterface	{
 	public function isConnected(): bool;
 	
 	/**
-	 * @return string|null
-	 *
-	 * returns the name of the database to which we're connected; null if not connected.
-	 */
-	public function getDatabase(): ?string;
-	
-	/**
-	 * @param string $database
-	 * @return bool
-	 *
-	 * connects to $database return true if successful and false otherwise.
-	 */
-	public function setDatabase(string $database): bool;
-	
-	/**
 	 * @param string $table
 	 * @throws DatabaseException
 	 * @return string[]
@@ -61,19 +46,19 @@ interface DatabaseInterface	{
 	/**
 	 * @param string $query
 	 * @param array  $criteria
-	 *
-	 * @return mixed|null
+	 * @throws DatabaseException
+	 * @return mixed
 	 *
 	 * given a query, returns the first column of the first row.
 	 * returns null if nothing is selected or nothing could be
 	 * selected.
 	 */
-	public function getVar(string $query, array $criteria = []): ?mixed;
+	public function getVar(string $query, array $criteria = []);
 	
 	/**
 	 * @param string $query
 	 * @param array  $criteria
-	 *
+	 * @throws DatabaseException
 	 * @return array
 	 *
 	 * given a query, returns all of the returns the first column
@@ -85,6 +70,7 @@ interface DatabaseInterface	{
 	/**
 	 * @param string $query
 	 * @param array  $criteria
+	 * @throws DatabaseException
 	 * @return array
 	 *
 	 * given a query, returns all columns of the first row returned.
@@ -96,6 +82,7 @@ interface DatabaseInterface	{
 	/**
 	 * @param string $query
 	 * @param array  $criteria
+	 * @throws DatabaseException
 	 * @return array
 	 *
 	 * given a query, returns an array indexed by the first column and
@@ -107,6 +94,7 @@ interface DatabaseInterface	{
 	/**
 	 * @param string $query
 	 * @param array  $criteria
+	 * @throws DatabaseException
 	 * @return array
 	 *
 	 * returns an array of all results selected or an empty array if nothing
@@ -117,6 +105,7 @@ interface DatabaseInterface	{
 	/**
 	 * @param string $table
 	 * @param array  $values
+	 * @throws DatabaseException
 	 * @return array|null
 	 *
 	 * inserts $values into $table returning the created ID or IDs.
@@ -128,6 +117,7 @@ interface DatabaseInterface	{
 	 * @param string $table
 	 * @param array  $values
 	 * @param array  $criteria
+	 * @throws DatabaseException
 	 * @return int
 	 *
 	 * updates $values within $table based on $criteria.  returns the
@@ -138,6 +128,7 @@ interface DatabaseInterface	{
 	/**
 	 * @param string $table
 	 * @param array  $criteria
+	 * @throws DatabaseException
 	 * @return int
 	 *
 	 * deletes from $table based on $criteria.  returns the number of
@@ -148,6 +139,7 @@ interface DatabaseInterface	{
 	/**
 	 * @param string $query
 	 * @param array  $criteria
+	 * @throws DatabaseException
 	 * @return bool
 	 *
 	 * sometimes, the above helper functions aren't enough.  this method
@@ -157,4 +149,14 @@ interface DatabaseInterface	{
 	 * style query that won't quite work using the insert method above.
 	 */
 	public function runQuery(string $query, array $criteria = []): bool;
+	
+	/**
+	 * @param string $query
+	 * @param array $criteria
+	 * @return string
+	 *
+	 * uses the profiling/logging capabilities within Aura/Sql to get the most
+	 * recent query
+	 */
+	public function getStatement(string $query, array $criteria = []): string;
 }

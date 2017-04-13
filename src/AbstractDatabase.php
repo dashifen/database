@@ -13,6 +13,11 @@ abstract class AbstractDatabase implements DatabaseInterface {
 	protected $dbConn;
 	
 	/**
+	 * @var string $database
+	 */
+	protected $database;
+	
+	/**
 	 * database constructor.
 	 *
 	 * @param string                 $dsn
@@ -21,11 +26,16 @@ abstract class AbstractDatabase implements DatabaseInterface {
 	 * @param array                  $options
 	 * @param array                  $queries
 	 * @param ProfilerInterface|null $profiler
+	 *
 	 * @throws DatabaseException
 	 */
-	public function __construct(string $dsn, string $username = null, string $password = null,
-		array $options = [], array $queries = [], ProfilerInterface $profiler = null)
-	{
+	public function __construct(
+		string $dsn,
+		string $username = null,
+		string $password = null,
+		array $options = [],
+		array $queries = [],
+		ProfilerInterface $profiler = null) {
 		if ($this->dbConn && $this->dbConn->isConnected()) {
 			$this->dbConn->disconnect();
 		}
@@ -36,6 +46,30 @@ abstract class AbstractDatabase implements DatabaseInterface {
 		if (!$this->dbConn->isConnected()) {
 			throw new DatabaseException("Unable to connect to database.");
 		}
+		
+		$parts = explode("=", $dsn);
+		$this->database = array_pop($parts);
+	}
+	
+	/**
+	 * @param \PDOException $pdoException
+	 * @param string        $query
+	 * @param array         $criteria
+	 *
+	 * @return DatabaseException
+	 *
+	 * uses the parameters to prepare one of our own exceptions and returns it.
+	 */
+	protected function prepareDatabaseException(\PDOException $pdoException, string $query, array $criteria = []): DatabaseException {
+		$databaseException = new DatabaseException(
+			$pdoException->getMessage(),
+			(int)$pdoException->getCode(),
+			$pdoException
+		);
+		
+		$query = $this->getStatement($query, $criteria);
+		$databaseException->setQuery($query);
+		return $databaseException;
 	}
 	
 	/**
@@ -48,7 +82,34 @@ abstract class AbstractDatabase implements DatabaseInterface {
 	}
 	
 	/**
+	 * @param string $table
+	 *
+	 * @return array
+	 * @throws DatabaseException
+	 */
+	public function getTableColumns(string $table): array {
+		$query = <<<QUERY
+			SELECT COLUMN_NAME
+			FROM INFORMATION_SCHEMA.COLUMNS
+			WHERE TABLE_SCHEMA = :database
+			AND TABLE_NAME = :table
+QUERY;
+		
+		$params = [
+			"database" => $this->database,
+			"table"    => $table,
+		];
+		
+		try {
+			return $this->getCol($query, $params);
+		} catch (\PDOException $databaseException) {
+			throw $this->prepareDatabaseException($databaseException, $query, $params);
+		}
+	}
+	
+	/**
 	 * @param  string $name
+	 *
 	 * @return int
 	 *
 	 * returns the ID of the most recently inserted row; name is unlikely
@@ -74,20 +135,26 @@ abstract class AbstractDatabase implements DatabaseInterface {
 	 * @param string $query
 	 * @param array  $criteria
 	 *
+	 * @throws DatabaseException
 	 * @return mixed|null
 	 *
 	 * given a query, returns the first column of the first row.
 	 * returns null if nothing is selected or nothing could be
 	 * selected.
 	 */
-	public function getVar(string $query, array $criteria = []): ?mixed {
-		return $this->dbConn->fetchValue($query, $criteria);
+	public function getVar(string $query, array $criteria = []) {
+		try {
+			return $this->dbConn->fetchValue($query, $criteria);
+		} catch (\PDOException $pdoException) {
+			throw $this->prepareDatabaseException($pdoException, $query, $criteria);
+		}
 	}
 	
 	/**
 	 * @param string $query
 	 * @param array  $criteria
 	 *
+	 * @throws DatabaseException
 	 * @return array
 	 *
 	 * given a query, returns all of the returns the first column
@@ -95,13 +162,18 @@ abstract class AbstractDatabase implements DatabaseInterface {
 	 * selected or nothing could be selected.
 	 */
 	public function getCol(string $query, array $criteria = []): array {
-		return $this->dbConn->fetchCol($query, $criteria);
+		try {
+			return $this->dbConn->fetchCol($query, $criteria);
+		} catch (\PDOException $pdoException) {
+			throw $this->prepareDatabaseException($pdoException, $query, $criteria);
+		}
 	}
 	
 	/**
 	 * @param string $query
 	 * @param array  $criteria
 	 *
+	 * @throws DatabaseException
 	 * @return array
 	 *
 	 * given a query, returns all columns of the first row returned.
@@ -109,13 +181,18 @@ abstract class AbstractDatabase implements DatabaseInterface {
 	 * be selected.
 	 */
 	public function getRow(string $query, array $criteria = []): array {
-		return $this->dbConn->fetchOne($query, $criteria);
+		try {
+			return $this->dbConn->fetchOne($query, $criteria);
+		} catch (\PDOException $pdoException) {
+			throw $this->prepareDatabaseException($pdoException, $query, $criteria);
+		}
 	}
 	
 	/**
 	 * @param string $query
 	 * @param array  $criteria
 	 *
+	 * @throws DatabaseException
 	 * @return array
 	 *
 	 * given a query, returns an array indexed by the first column and
@@ -123,26 +200,36 @@ abstract class AbstractDatabase implements DatabaseInterface {
 	 * empty array if nothing is selected or could be selected
 	 */
 	public function getMap(string $query, array $criteria = []): array {
-		return $this->dbConn->fetchAssoc($query, $criteria);
+		try {
+			return $this->dbConn->fetchAssoc($query, $criteria);
+		} catch (\PDOException $pdoException) {
+			throw $this->prepareDatabaseException($pdoException, $query, $criteria);
+		}
 	}
 	
 	/**
 	 * @param string $query
 	 * @param array  $criteria
 	 *
+	 * @throws DatabaseException
 	 * @return array
 	 *
 	 * returns an array of all results selected or an empty array if nothing
 	 * was selected or nothing could be selected.
 	 */
 	public function getResults(string $query, array $criteria = []): array {
-		return $this->dbConn->fetchAll($query, $criteria);
+		try {
+			return $this->dbConn->fetchAll($query, $criteria);
+		} catch (\PDOException $pdoException) {
+			throw $this->prepareDatabaseException($pdoException, $query, $criteria);
+		}
 	}
 	
 	/**
 	 * @param string $table
 	 * @param array  $values
 	 *
+	 * @throws DatabaseException
 	 * @return array|null
 	 *
 	 * inserts $values into $table returning the created ID or IDs.
@@ -156,14 +243,19 @@ abstract class AbstractDatabase implements DatabaseInterface {
 		// multiple ones.  either way the $values array tells us what to do.  if
 		// it's an array of arrays, then we do multiples.
 		
-		return isset($values[0]) && is_array($values[0])
-			? $this->insertMultiple($table, $values)
-			: $this->insertSingle($table, $values);
+		try {
+			return isset($values[0]) && is_array($values[0])
+				? $this->insertMultiple($table, $values)
+				: $this->insertSingle($table, $values);
+		} catch (\PDOException $pdoException) {
+			throw $this->prepareDatabaseException($pdoException, $table, $values);
+		}
 	}
 	
 	/**
 	 * @param string $table
 	 * @param array  $values
+	 *
 	 * @return mixed|null
 	 *
 	 * used when inserting multiple rows into the database in a single query.
@@ -185,10 +277,9 @@ abstract class AbstractDatabase implements DatabaseInterface {
 			// series of them.  e.g., if we're inserting sets of two columns, this'll
 			// make (?,?), (?,?), (?,?)... for us.
 			
-			$parenthetical  = $this->placeholders(sizeof($columns));
+			$parenthetical = $this->placeholders(sizeof($columns));
 			$parentheticals = $this->placeholders(sizeof($values), $parenthetical, false);
-			$columns = join(", ", $this->escapeNames($columns));
-			$table = $this->escapeName($table);
+			$columns = join(", ", $columns);
 			
 			$statement = "INSERT INTO $table ($columns) VALUES $parentheticals";
 			
@@ -205,6 +296,7 @@ abstract class AbstractDatabase implements DatabaseInterface {
 	/**
 	 * @param string $table
 	 * @param array  $values
+	 *
 	 * @return mixed|null
 	 *
 	 * produces a SQL query using the parameters
@@ -222,6 +314,7 @@ abstract class AbstractDatabase implements DatabaseInterface {
 	/**
 	 * @param string $table
 	 * @param array  $values
+	 *
 	 * @return string
 	 *
 	 * as the mysql implementation of this object includes an upsert query which
@@ -230,8 +323,7 @@ abstract class AbstractDatabase implements DatabaseInterface {
 	 * insert query as well as the mysql specific upsert one.
 	 */
 	protected function insertBuild(string $table, array $values): string {
-		$table = $this->escapeName($table);
-		$columns  = join(", ", $this->escapeNames(array_keys($values)));
+		$columns = join(", ", array_keys($values));
 		$bindings = $this->placeholders(sizeof($values));
 		return "INSERT INTO $table ($columns) VALUES $bindings";
 	}
@@ -239,6 +331,7 @@ abstract class AbstractDatabase implements DatabaseInterface {
 	/**
 	 * @param array $columns
 	 * @param array $values
+	 *
 	 * @throws DatabaseException
 	 * @return bool
 	 */
@@ -285,6 +378,7 @@ abstract class AbstractDatabase implements DatabaseInterface {
 	/**
 	 * @param string $statement
 	 * @param array  $values
+	 *
 	 * @throws DatabaseException
 	 * @return array|null
 	 */
@@ -313,7 +407,7 @@ abstract class AbstractDatabase implements DatabaseInterface {
 		// be [10,9,8,7,6,5] because that's six IDs.  so, we want to do 10 - (5 - 1) which
 		// would result in [10,9,8,7,6] which is the correct response.
 		
-		$lastId  = $this->getInsertedId();
+		$lastId = $this->getInsertedId();
 		$firstId = $lastId - ($affected - 1);
 		return range($lastId, $firstId);
 	}
@@ -323,6 +417,7 @@ abstract class AbstractDatabase implements DatabaseInterface {
 	 * @param array  $values
 	 * @param array  $criteria
 	 *
+	 * @throws DatabaseException
 	 * @return int
 	 *
 	 * updates $values within $table based on $criteria.  returns the
@@ -336,15 +431,15 @@ abstract class AbstractDatabase implements DatabaseInterface {
 		// us to do.
 		
 		$updates = $where = "";
-		$valueColumns = $this->escapeNames(array_keys($values));
+		$valueColumns = array_keys($values);
 		foreach ($valueColumns as $column) {
 			$updates .= $column . " = ? ";
 		}
 		
-		$statement = "UPDATE " . $this->escapeName($table) . " SET $updates";
+		$statement = "UPDATE $table SET $updates";
 		
 		if (sizeof($criteria) > 0) {
-			$whereColumns = $this->escapeNames(array_keys($criteria));
+			$whereColumns = array_keys($criteria);
 			foreach ($whereColumns as $column) {
 				$where .= $column . " = ? ";
 			}
@@ -356,17 +451,20 @@ abstract class AbstractDatabase implements DatabaseInterface {
 		// which are then bound to the statement by the ExtendedPdo object.  then, we can perform
 		// the statement and return the number of affected rows.
 		
-		echo $statement;
-		
 		$bindings = $this->mergeBindings($values, $criteria);
 		
-		echo "<pre>" . print_r($bindings, true) . "</pre>";
-		return $this->dbConn->fetchAffected($statement, $bindings);
+		try {
+			return $this->dbConn->fetchAffected($statement, $bindings);
+		} catch (\PDOException $pdoException) {
+			throw $this->prepareDatabaseException($pdoException, $statement, $bindings);
+		}
 	}
 	
 	/**
 	 * @param string $table
 	 * @param array  $criteria
+	 *
+	 * @throws DatabaseException
 	 * @return int
 	 *
 	 * deletes from $table based on $criteria.  returns the number of
@@ -378,7 +476,7 @@ abstract class AbstractDatabase implements DatabaseInterface {
 		// to build a query.  unlike that one, we execute it here and return the
 		// number of deleted rows.
 		
-		$statement = "DELETE FROM " . $this->escapeName($table);
+		$statement = "DELETE FROM $table";
 		
 		if (sizeof($criteria) > 0) {
 			
@@ -386,18 +484,27 @@ abstract class AbstractDatabase implements DatabaseInterface {
 			// like x=? AND y=? AND z=? so that we can tack it onto our
 			// $statement
 			
-			$columns = $this->escapeNames(array_keys($criteria));
-			array_walk($columns, function(&$x) { $x = $x . "=?"; });
+			$columns = array_keys($criteria);
+			array_walk($columns, function(&$x) {
+				$x = $x . "=?";
+			});
 			$statement .= " WHERE " . join(" AND ", $columns);
 		}
 		
+		$bindings = array_values($criteria);
 		
-		return $this->dbConn->fetchAffected($statement, array_values($criteria));
+		try {
+			return $this->dbConn->fetchAffected($statement, $bindings);
+		} catch (\PDOException $pdoException) {
+			throw $this->prepareDatabaseException($pdoException, $statement, $bindings);
+		}
 	}
 	
 	/**
 	 * @param string $query
 	 * @param array  $criteria
+	 *
+	 * @throws DatabaseException
 	 * @return bool
 	 *
 	 * sometimes, the above helper functions aren't enough.  this method
@@ -415,27 +522,62 @@ abstract class AbstractDatabase implements DatabaseInterface {
 		// such problems, so we can look for that in returning our boolean value
 		// here.
 		
-		$pdoStatement = $this->dbConn->perform($query, $criteria);
+		try {
+			$pdoStatement = $this->dbConn->perform($query, $criteria);
+		} catch (\PDOException $pdoException) {
+			throw $this->prepareDatabaseException($pdoException, $query, $criteria);
+		}
+		
 		$errorCode = $pdoStatement->errorCode();
 		return $errorCode == "00000";
 	}
 	
 	/**
-	 * @param string[] $names
-	 * @return array
+	 * @param string $query
+	 * @param array  $criteria
 	 *
-	 * escapes each string in $names.  each database handles the means to escape
-	 * it's names differently (e.g. mysql uses back ticks, sql server uses square
-	 * brackets), so this aggregate function simply calls the abstract one
-	 * declared below.
+	 * @return string
+	 *
+	 * source: http://stackoverflow.com/a/12015992/360838 (accessed 2017-04-13)
 	 */
-	protected function escapeNames(array $names): array {
-		return array_map([$this, "escapeName"], $names);
+	public function getStatement(string $query, array $criteria = []): string {
+		
+		// the ExtendedPdo object uses its parser to manipulate the criteria it
+		// receives to do additional tasks like handling arrays for IN () clauses.
+		// to try and get as close to the statement that is run against the
+		// database as possible, we'll do that here, too.
+		
+		$parser = $this->dbConn->getParser();
+		list($query, $criteria) = $parser->rebuild($query, $criteria);
+		
+		// now, we'll use the (slightly modified) code from stack overflow
+		// (referenced above) to builds a string version of the statement.
+		
+		$keys = array();
+		foreach ($criteria as $key => $value) {
+			if (is_string($key)) {
+				$keys[] = '/:' . $key . '/';
+			} else {
+				$keys[] = '/[?]/';
+			}
+			
+			if (is_array($value)) {
+				$criteria[$key] = implode(',', $value);
+			}
+			
+			if (is_null($value)) {
+				$criteria[$key] = 'NULL';
+			}
+		}
+		
+		return preg_replace($keys, $criteria, $query);
 	}
 	
 	/**
-	 * @param int $count
+	 * @param int    $count
 	 * @param string $placeholder
+	 * @param bool   $surround
+	 *
 	 * @return string
 	 *
 	 * returns a string appropriate for use within a statement as the placeholders
@@ -443,11 +585,17 @@ abstract class AbstractDatabase implements DatabaseInterface {
 	 */
 	protected function placeholders(int $count, string $placeholder = '?', bool $surround = true): string {
 		$temp = join(", ", array_pad([], $count, $placeholder));
+		
+		// the above line simply gives us a comma separated string of $count placeholders.
+		// by default we want to surround them with parentheses, but sometimes maybe we
+		// don't.  the $surround bool will tells us how to proceed.
+		
 		return $surround ? "($temp)" : $temp;
 	}
 	
 	/**
 	 * @param array[] ...$arrays
+	 *
 	 * @return array
 	 *
 	 * merges the list of arrays it receives from the calling scope into a single
@@ -463,12 +611,11 @@ abstract class AbstractDatabase implements DatabaseInterface {
 		// learned to do here: http://stackoverflow.com/a/1320156/360838.
 		
 		$bindings = [];
-		array_walk_recursive($arrays, function($x) use (&$bindings) { $bindings[] = $x; });
+		
+		array_walk_recursive($arrays, function($x) use (&$bindings) {
+			$bindings[] = $x;
+		});
+		
 		return $bindings;
 	}
-	
-	abstract public function getDatabase(): ?string;
-	abstract public function setDatabase(string $database): bool;
-	abstract public function getTableColumns(string $table): array;
-	abstract protected function escapeName(string $name): string;
 }

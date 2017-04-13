@@ -8,3 +8,13 @@ Fixed psr-4 autoloading
 
 ##1.0.2-beta
 Fixed insertMultiple's extra parens
+
+##1.0.3-beta
+ * Added getStatement()
+ * Added exceptions for failures
+ * Added query getters/setters for exceptions
+ * Added database property 
+ * Removed escaping functions
+ * Removed some stuff too specific to MySQL
+ 
+ 

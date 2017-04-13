@@ -12,6 +12,7 @@ interface MysqlInterface {
 	 * @param string $table
 	 * @param array  $values
 	 * @param array  $updates
+	 * @throws MysqlException
 	 * @return int
 	 *
 	 * inserts $values into $table, but on encountering duplicate keys, uses $updates
