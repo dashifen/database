@@ -15,10 +15,9 @@
 		"aura",
 		"auraphp"
 	],
-	"version": "1.0.3-beta",
 	"license": "MIT",
 	"require": {
-		"aura/sql": ">=3.0.0-alpha1"
+		"aura/sql": "^3.0.0-alpha1"
 	},
 	"autoload": {
 		"psr-4": {
