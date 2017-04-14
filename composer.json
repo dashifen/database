@@ -17,6 +17,7 @@
 	],
 	"license": "MIT",
 	"require": {
+		"php": "^7.1",
 		"aura/sql": "^3.0.0-alpha1"
 	},
 	"autoload": {
