@@ -2,11 +2,13 @@
 
 namespace Dashifen\Database\Mysql;
 
+use Dashifen\Database\DatabaseInterface;
+
 /**
  * Interface MysqlInterface
  * @package Dashifen\Database\Mysql
  */
-interface MysqlInterface {
+interface MysqlInterface extends DatabaseInterface {
 	
 	/**
 	 * @param string $table

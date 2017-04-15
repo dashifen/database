@@ -17,4 +17,8 @@ Fixed insertMultiple's extra parens
  * Removed escaping functions
  * Removed some stuff too specific to MySQL
  
- 
+##1.0.4
+added PHP version to composer.json
+
+##1.0.5
+MysqlInterface extends DatabaseInterface   
