@@ -2,7 +2,7 @@
 
 namespace Dashifen\Database;
 
-class DatabaseException extends \Exception {
+class DatabaseException extends \Exception implements DatabaseExceptionInterface {
 	
 	/**
 	 * @var string $query
@@ -19,7 +19,7 @@ class DatabaseException extends \Exception {
 	/**
 	 * @param string $query
 	 */
-	public function setQuery(string $query) {
+	public function setQuery(string $query): void {
 		$this->query = $query;
 	}
 }
