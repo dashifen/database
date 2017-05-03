@@ -204,30 +204,24 @@ QUERY;
 	 */
 	public function getMap(string $query, array $criteria = []): array {
 		try {
-			$results = $this->dbConn->fetchGroup($query, $criteria);
 			
-			// here's where we differ a bit from the underlying ExtendedPdo
-			// object.  my version of getting a map should return key/value
-			// pairs when there's only one value, and key/[value] pairs when
-			// there's more than one.  first, we'll bail out if we didn't get
-			// anything.
+			// this one is odd.  the way a map works in Dash's prior apps
+			// is to key an array off of the first selected column and the
+			// values for those keys are the second and subsequently selected
+			// columns.  but, if there's only a single additional selected
+			// column, then our map should be a one-dimensional array of pairs.
+			// since we're going to have to loop over the information that we
+			// select from the database anyway, we'll use the generator
+			// syntax here to our loops down to one.
 			
-			if (!is_array($results)) {
-				return [];
+			$map = [];
+			foreach ($this->dbConn->yieldAll($query, $criteria) as $result) {
+				$key = array_shift($result);
+				$value = sizeof($result)===1 ? array_shift($result) : $result;
+				$map[$key] = $value;
 			}
 			
-			// now we know we got at least one thing from the database.  we'll
-			// look at it and see if it's alone or if it has friends.  if it's
-			// alone, we'll remove the inner arrays to produce simple x/y pairs
-			// suitable for hash table style lookup.
-			
-			foreach ($results as &$result) {
-				if (sizeof($results) === 1) {
-					$result = $result[0];
-				}
-			}
-			
-			return $results;
+			return $map;
 		} catch (\PDOException $pdoException) {
 			throw $this->prepareDatabaseException($pdoException, $query, $criteria);
 		}
