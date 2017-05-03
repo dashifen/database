@@ -101,7 +101,8 @@ QUERY;
 		];
 		
 		try {
-			return $this->getCol($query, $params);
+			$results = $this->getCol($query, $params);
+			return is_array($results) ? $results : [];
 		} catch (\PDOException $databaseException) {
 			throw $this->prepareDatabaseException($databaseException, $query, $params);
 		}
@@ -163,7 +164,8 @@ QUERY;
 	 */
 	public function getCol(string $query, array $criteria = []): array {
 		try {
-			return $this->dbConn->fetchCol($query, $criteria);
+			$results = $this->dbConn->fetchCol($query, $criteria);
+			return is_array($results) ? $results : [];
 		} catch (\PDOException $pdoException) {
 			throw $this->prepareDatabaseException($pdoException, $query, $criteria);
 		}
@@ -182,7 +184,8 @@ QUERY;
 	 */
 	public function getRow(string $query, array $criteria = []): array {
 		try {
-			return $this->dbConn->fetchOne($query, $criteria);
+			$results = $this->dbConn->fetchOne($query, $criteria);
+			return is_array($results) ? $results : [];
 		} catch (\PDOException $pdoException) {
 			throw $this->prepareDatabaseException($pdoException, $query, $criteria);
 		}
@@ -201,7 +204,8 @@ QUERY;
 	 */
 	public function getMap(string $query, array $criteria = []): array {
 		try {
-			return $this->dbConn->fetchAssoc($query, $criteria);
+			$results = $this->dbConn->fetchAssoc($query, $criteria);
+			return is_array($results) ? $results : [];
 		} catch (\PDOException $pdoException) {
 			throw $this->prepareDatabaseException($pdoException, $query, $criteria);
 		}
@@ -219,7 +223,8 @@ QUERY;
 	 */
 	public function getResults(string $query, array $criteria = []): array {
 		try {
-			return $this->dbConn->fetchAll($query, $criteria);
+			$results = $this->dbConn->fetchAll($query, $criteria);
+			return is_array($results) ? $results : [];
 		} catch (\PDOException $pdoException) {
 			throw $this->prepareDatabaseException($pdoException, $query, $criteria);
 		}
