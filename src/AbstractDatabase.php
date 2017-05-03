@@ -204,7 +204,7 @@ QUERY;
 	 */
 	public function getMap(string $query, array $criteria = []): array {
 		try {
-			$results = $this->dbConn->fetchAssoc($query, $criteria);
+			$results = $this->dbConn->fetchGroup($query, $criteria);
 			return is_array($results) ? $results : [];
 		} catch (\PDOException $pdoException) {
 			throw $this->prepareDatabaseException($pdoException, $query, $criteria);
