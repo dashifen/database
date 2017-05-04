@@ -11,6 +11,13 @@ use Dashifen\Database\DatabaseException;
  * @package Dashifen\Database\MySQL\
  */
 class MysqlDatabase extends AbstractDatabase implements MysqlInterface {
+	public function __construct($dsn, $username = null, $password = null, array $options = [], array $queries = [], $profiler = null) {
+		parent::__construct($dsn, $username, $password, $options, $queries, $profiler);
+		$this->columnPrefix = "`";
+		$this->columnSuffix = "`";
+	}
+	
+	
 	/**
 	 * @param string $table
 	 * @param array  $values
@@ -28,12 +35,12 @@ class MysqlDatabase extends AbstractDatabase implements MysqlInterface {
 		
 		// our illustrious (and attractive) programmer provided the means to grab
 		// the built INSERT query from our parent as we can see above.  now, we just
-		// have to add the ON DUPLICATE KEY UPDATE syntax to that foundation.
+		// have to add the ON DUPLICATE KEY UPDATE ssyntax to that foundation.
 		
 		$temp = [];
 		$columns = array_keys($updates);
 		foreach ($columns as $column) {
-			$temp[] = "$column = ?";
+			$temp[] = sprintf("%s%s%s = ?", $this->columnPrefix, $column, $this->columnSuffix);
 		}
 		
 		$insert .= " ON DUPLICATE KEY UPDATE " . join(", ", $temp);

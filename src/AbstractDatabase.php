@@ -18,6 +18,16 @@ abstract class AbstractDatabase implements DatabaseInterface {
 	protected $database;
 	
 	/**
+	 * @var string $columnPrefix
+	 */
+	protected $columnPrefix = "";
+	
+	/**
+	 * @var string $columnSuffix
+	 */
+	protected $columnSuffix = "";
+	
+	/**
 	 * database constructor.
 	 *
 	 * @param string                 $dsn
@@ -49,27 +59,6 @@ abstract class AbstractDatabase implements DatabaseInterface {
 		
 		$parts = explode("=", $dsn);
 		$this->database = array_pop($parts);
-	}
-	
-	/**
-	 * @param \PDOException $pdoException
-	 * @param string        $query
-	 * @param array         $criteria
-	 *
-	 * @return DatabaseException
-	 *
-	 * uses the parameters to prepare one of our own exceptions and returns it.
-	 */
-	protected function prepareDatabaseException(\PDOException $pdoException, string $query, array $criteria = []): DatabaseException {
-		$databaseException = new DatabaseException(
-			$pdoException->getMessage(),
-			(int)$pdoException->getCode(),
-			$pdoException
-		);
-		
-		$query = $this->getStatement($query, $criteria);
-		$databaseException->setQuery($query);
-		return $databaseException;
 	}
 	
 	/**
@@ -109,23 +98,92 @@ QUERY;
 	}
 	
 	/**
-	 * @param  string $name
+	 * @param string $query
+	 * @param array  $criteria
 	 *
-	 * @return int
+	 * @throws DatabaseException
+	 * @return array
 	 *
-	 * returns the ID of the most recently inserted row; name is unlikely
-	 * to be necessary, according to the Aura\Sql docs, but it's important
-	 * for some DB systems, e.g. PostgreSQL.
+	 * given a query, returns all of the returns the first column
+	 * for all returned rows.  returns an empty array if nothing is
+	 * selected or nothing could be selected.
 	 */
-	public function getInsertedId(string $name = null): int {
-		return $this->dbConn->lastInsertId($name);
+	public function getCol(string $query, array $criteria = []): array {
+		try {
+			$results = $this->dbConn->fetchCol($query, $criteria);
+			return is_array($results) ? $results : [];
+		} catch (\PDOException $pdoException) {
+			throw $this->prepareDatabaseException($pdoException, $query, $criteria);
+		}
+	}
+	
+	/**
+	 * @param \PDOException $pdoException
+	 * @param string        $query
+	 * @param array         $criteria
+	 *
+	 * @return DatabaseException
+	 *
+	 * uses the parameters to prepare one of our own exceptions and returns it.
+	 */
+	protected function prepareDatabaseException(\PDOException $pdoException, string $query, array $criteria = []): DatabaseException {
+		$databaseException = new DatabaseException(
+			$pdoException->getMessage(),
+			(int)$pdoException->getCode(),
+			$pdoException
+		);
+		
+		$query = $this->getStatement($query, $criteria);
+		$databaseException->setQuery($query);
+		return $databaseException;
+	}
+	
+	/**
+	 * @param string $query
+	 * @param array  $criteria
+	 *
+	 * @return string
+	 *
+	 * source: http://stackoverflow.com/a/12015992/360838 (accessed 2017-04-13)
+	 */
+	public function getStatement(string $query, array $criteria = []): string {
+		
+		// the ExtendedPdo object uses its parser to manipulate the criteria it
+		// receives to do additional tasks like handling arrays for IN () clauses.
+		// to try and get as close to the statement that is run against the
+		// database as possible, we'll do that here, too.
+		
+		$parser = $this->dbConn->getParser();
+		list($query, $criteria) = $parser->rebuild($query, $criteria);
+		
+		// now, we'll use the (slightly modified) code from stack overflow
+		// (referenced above) to builds a string version of the statement.
+		
+		$keys = array();
+		foreach ($criteria as $key => $value) {
+			if (is_string($key)) {
+				$keys[] = '/:' . $key . '/';
+			} else {
+				$keys[] = '/[?]/';
+			}
+			
+			if (is_array($value)) {
+				$criteria[$key] = implode(',', $value);
+			}
+			
+			if (is_null($value)) {
+				$criteria[$key] = 'NULL';
+			}
+		}
+		
+		return preg_replace($keys, $criteria, $query);
 	}
 	
 	/**
 	 * @return array|null
 	 *
-	 * returns an array using PDO error codes as indices and error information as values
-	 * or null if there were no errors to return.
+	 * returns an array using PDO error codes as indices and error information
+	 * as values or null if there were no errors to return.
 	 */
 	public function getError(): ?array {
 		$errorCode = $this->dbConn->errorCode();
@@ -146,26 +204,6 @@ QUERY;
 	public function getVar(string $query, array $criteria = []) {
 		try {
 			return $this->dbConn->fetchValue($query, $criteria);
-		} catch (\PDOException $pdoException) {
-			throw $this->prepareDatabaseException($pdoException, $query, $criteria);
-		}
-	}
-	
-	/**
-	 * @param string $query
-	 * @param array  $criteria
-	 *
-	 * @throws DatabaseException
-	 * @return array
-	 *
-	 * given a query, returns all of the returns the first column
-	 * for all returned rows.  returns an empty array if nothing is
-	 * selected or nothing could be selected.
-	 */
-	public function getCol(string $query, array $criteria = []): array {
-		try {
-			$results = $this->dbConn->fetchCol($query, $criteria);
-			return is_array($results) ? $results : [];
 		} catch (\PDOException $pdoException) {
 			throw $this->prepareDatabaseException($pdoException, $query, $criteria);
 		}
@@ -217,7 +255,7 @@ QUERY;
 			$map = [];
 			foreach ($this->dbConn->yieldAll($query, $criteria) as $result) {
 				$key = array_shift($result);
-				$value = sizeof($result)===1 ? array_shift($result) : $result;
+				$value = sizeof($result) === 1 ? array_shift($result) : $result;
 				$map[$key] = $value;
 			}
 			
@@ -315,41 +353,6 @@ QUERY;
 	}
 	
 	/**
-	 * @param string $table
-	 * @param array  $values
-	 *
-	 * @return mixed|null
-	 *
-	 * produces a SQL query using the parameters
-	 */
-	protected function insertSingle(string $table, array $values): ?array {
-		
-		// this one is far less complex that our insertMultiple above.  we'll build our
-		// statement and then pass control over to insertExecute which'll actually perform
-		// our statement and return the appropriate results up the call stack.
-		
-		$statement = $this->insertBuild($table, $values);
-		return $this->insertExecute($statement, $values);
-	}
-	
-	/**
-	 * @param string $table
-	 * @param array  $values
-	 *
-	 * @return string
-	 *
-	 * as the mysql implementation of this object includes an upsert query which
-	 * begins with teh same syntax as our insert here, this method builds the insert
-	 * and returns it.  this allows us to use the same logic for both the general
-	 * insert query as well as the mysql specific upsert one.
-	 */
-	protected function insertBuild(string $table, array $values): string {
-		$columns = join(", ", array_keys($values));
-		$bindings = $this->placeholders(sizeof($values));
-		return "INSERT INTO $table ($columns) VALUES $bindings";
-	}
-	
-	/**
 	 * @param array $columns
 	 * @param array $values
 	 *
@@ -397,6 +400,27 @@ QUERY;
 	}
 	
 	/**
+	 * @param int    $count
+	 * @param string $placeholder
+	 * @param bool   $surround
+	 *
+	 * @return string
+	 *
+	 * returns a string appropriate for use within a statement as the
+	 * placeholders for a series of bound values.  e.g., for a count of 3,
+	 * returns (?, ?, ?).
+	 */
+	protected function placeholders(int $count, string $placeholder = '?', bool $surround = true): string {
+		$temp = join(", ", array_pad([], $count, $placeholder));
+		
+		// the above line simply gives us a comma separated string of $count placeholders.
+		// by default we want to surround them with parentheses, but sometimes maybe we
+		// don't.  the $surround bool will tells us how to proceed.
+		
+		return $surround ? "($temp)" : $temp;
+	}
+	
+	/**
 	 * @param string $statement
 	 * @param array  $values
 	 *
@@ -434,6 +458,86 @@ QUERY;
 	}
 	
 	/**
+	 * @param  string $name
+	 *
+	 * @return int
+	 *
+	 * returns the ID of the most recently inserted row; name is unlikely
+	 * to be necessary, according to the Aura\Sql docs, but it's important
+	 * for some DB systems, e.g. PostgreSQL.
+	 */
+	public function getInsertedId(string $name = null): int {
+		return $this->dbConn->lastInsertId($name);
+	}
+	
+	/**
+	 * @param array[] ...$arrays
+	 *
+	 * @return array
+	 *
+	 * merges the list of arrays it receives from the calling scope into a
+	 * single array adding each value sequentially without overriding keys or
+	 * other such problems.
+	 */
+	protected function mergeBindings(array ...$arrays): array {
+		
+		// at first blush, it seems like one could use something like array_merge()
+		// to build our return value, but because that method would overwrite matching
+		// keys in early arrays with values in the latter ones, we can't rely on it.
+		// instead, what we actually want to do is flatten our $arrays which we've
+		// learned to do here: http://stackoverflow.com/a/1320156/360838.
+		
+		$bindings = [];
+		
+		array_walk_recursive($arrays, function($x) use (&$bindings) {
+			$bindings[] = $x;
+		});
+		
+		return $bindings;
+	}
+	
+	/**
+	 * @param string $table
+	 * @param array  $values
+	 *
+	 * @return mixed|null
+	 *
+	 * produces a SQL query using the parameters
+	 */
+	protected function insertSingle(string $table, array $values): ?array {
+		
+		// this one is far less complex that our insertMultiple above.  we'll build our
+		// statement and then pass control over to insertExecute which'll actually perform
+		// our statement and return the appropriate results up the call stack.
+		
+		$statement = $this->insertBuild($table, $values);
+		return $this->insertExecute($statement, $values);
+	}
+	
+	/**
+	 * @param string $table
+	 * @param array  $values
+	 *
+	 * @return string
+	 *
+	 * as the mysql implementation of this object includes an upsert query
+	 * which
+	 * begins with teh same syntax as our insert here, this method builds the
+	 * insert and returns it.  this allows us to use the same logic for both
+	 * the general insert query as well as the mysql specific upsert one.
+	 */
+	protected function insertBuild(string $table, array $values): string {
+		$columns = join(", ", array_keys($values));
+		
+		array_walk($columns, function(&$x) {
+			$x = sprintf("%s%s%s", $this->columnPrefix, $x, $this->columnSuffix);
+		});
+		
+		$bindings = $this->placeholders(sizeof($values));
+		return "INSERT INTO $table ($columns) VALUES $bindings";
+	}
+	
+	/**
 	 * @param string $table
 	 * @param array  $values
 	 * @param array  $criteria
@@ -454,7 +558,7 @@ QUERY;
 		$updates = $where = "";
 		$valueColumns = array_keys($values);
 		foreach ($valueColumns as $column) {
-			$updates .= $column . " = ? ";
+			$updates .= sprintf("%s%s%s = ?", $this->columnPrefix, $column, $this->columnSuffix);
 		}
 		
 		$statement = "UPDATE $table SET $updates";
@@ -462,7 +566,7 @@ QUERY;
 		if (sizeof($criteria) > 0) {
 			$whereColumns = array_keys($criteria);
 			foreach ($whereColumns as $column) {
-				$where .= $column . " = ? ";
+				$where .= sprintf("%s%s%s = ?", $this->columnPrefix, $column, $this->columnSuffix);
 			}
 			
 			$statement .= " WHERE $where";
@@ -507,7 +611,7 @@ QUERY;
 			
 			$columns = array_keys($criteria);
 			array_walk($columns, function(&$x) {
-				$x = $x . "=?";
+				$x = sprintf("%s%s%s = ?", $this->columnPrefix, $x, $this->columnSuffix);
 			});
 			$statement .= " WHERE " . join(" AND ", $columns);
 		}
@@ -551,92 +655,5 @@ QUERY;
 		
 		$errorCode = $pdoStatement->errorCode();
 		return $errorCode == "00000";
-	}
-	
-	/**
-	 * @param string $query
-	 * @param array  $criteria
-	 *
-	 * @return string
-	 *
-	 * source: http://stackoverflow.com/a/12015992/360838 (accessed 2017-04-13)
-	 */
-	public function getStatement(string $query, array $criteria = []): string {
-		
-		// the ExtendedPdo object uses its parser to manipulate the criteria it
-		// receives to do additional tasks like handling arrays for IN () clauses.
-		// to try and get as close to the statement that is run against the
-		// database as possible, we'll do that here, too.
-		
-		$parser = $this->dbConn->getParser();
-		list($query, $criteria) = $parser->rebuild($query, $criteria);
-		
-		// now, we'll use the (slightly modified) code from stack overflow
-		// (referenced above) to builds a string version of the statement.
-		
-		$keys = array();
-		foreach ($criteria as $key => $value) {
-			if (is_string($key)) {
-				$keys[] = '/:' . $key . '/';
-			} else {
-				$keys[] = '/[?]/';
-			}
-			
-			if (is_array($value)) {
-				$criteria[$key] = implode(',', $value);
-			}
-			
-			if (is_null($value)) {
-				$criteria[$key] = 'NULL';
-			}
-		}
-		
-		return preg_replace($keys, $criteria, $query);
-	}
-	
-	/**
-	 * @param int    $count
-	 * @param string $placeholder
-	 * @param bool   $surround
-	 *
-	 * @return string
-	 *
-	 * returns a string appropriate for use within a statement as the placeholders
-	 * for a series of bound values.  e.g., for a count of 3, returns (?, ?, ?).
-	 */
-	protected function placeholders(int $count, string $placeholder = '?', bool $surround = true): string {
-		$temp = join(", ", array_pad([], $count, $placeholder));
-		
-		// the above line simply gives us a comma separated string of $count placeholders.
-		// by default we want to surround them with parentheses, but sometimes maybe we
-		// don't.  the $surround bool will tells us how to proceed.
-		
-		return $surround ? "($temp)" : $temp;
-	}
-	
-	/**
-	 * @param array[] ...$arrays
-	 *
-	 * @return array
-	 *
-	 * merges the list of arrays it receives from the calling scope into a single
-	 * array adding each value sequentially without overriding keys or other such
-	 * problems.
-	 */
-	protected function mergeBindings(array ...$arrays): array {
-		
-		// at first blush, it seems like one could use something like array_merge()
-		// to build our return value, but because that method would overwrite matching
-		// keys in early arrays with values in the latter ones, we can't rely on it.
-		// instead, what we actually want to do is flatten our $arrays which we've
-		// learned to do here: http://stackoverflow.com/a/1320156/360838.
-		
-		$bindings = [];
-		
-		array_walk_recursive($arrays, function($x) use (&$bindings) {
-			$bindings[] = $x;
-		});
-		
-		return $bindings;
 	}
 }
