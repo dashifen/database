@@ -53,7 +53,7 @@ class MysqlDatabase extends AbstractDatabase implements MysqlInterface {
 		
 		try {
 			return $this->dbConn->fetchAffected($insert, $bindings);
-		} catch (DatabaseException $databaseException) {
+		} catch (\PDOException $databaseException) {
 			throw $this->prepareMysqlException($databaseException, $insert, $bindings);
 		}
 	}

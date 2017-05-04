@@ -521,17 +521,19 @@ QUERY;
 	 * @return string
 	 *
 	 * as the mysql implementation of this object includes an upsert query
-	 * which
-	 * begins with teh same syntax as our insert here, this method builds the
-	 * insert and returns it.  this allows us to use the same logic for both
+	 * which begins with teh same syntax as our insert here, this method builds
+	 * the insert and returns it.  this allows us to use the same logic for both
 	 * the general insert query as well as the mysql specific upsert one.
 	 */
 	protected function insertBuild(string $table, array $values): string {
-		$columns = join(", ", array_keys($values));
 		
-		array_walk($columns, function(&$x) {
-			$x = sprintf("%s%s%s", $this->columnPrefix, $x, $this->columnSuffix);
-		});
+		// we want to take the keys of our $values argument and turn them
+		// into an escaped list of columns into which we insert.  this uses
+		// the column prefix and suffix properties to do the escaping.
+		
+		$columns = array_keys($values);
+		$separator = $this->columnSuffix . ", " . $this->columnPrefix;
+		$columns = $this->columnPrefix . join($separator, $columns) . $this->columnSuffix;
 		
 		$bindings = $this->placeholders(sizeof($values));
 		return "INSERT INTO $table ($columns) VALUES $bindings";
