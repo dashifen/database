@@ -98,6 +98,13 @@ QUERY;
 	}
 	
 	/**
+	 * @return null|string
+	 */
+	public function getDatabase(): ?string {
+		return $this->isConnected() ? $this->database : null;
+	}
+	
+	/**
 	 * @param string $query
 	 * @param array  $criteria
 	 *

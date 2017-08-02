@@ -26,6 +26,14 @@ interface DatabaseInterface	{
 	public function getTableColumns(string $table): array;
 	
 	/**
+	 * @return null|string
+	 *
+	 * returns the name of the database to which we're connected or
+	 * null if no connection has been made.
+	 */
+	public function getDatabase(): ?string;
+
+	/**
 	 * @param  string $name
 	 * @return int
 	 *
