@@ -564,13 +564,14 @@ QUERY;
 		// methods, all we need to do is build our statement which isn't too hard for
 		// us to do.
 		
-		$updates = $where = "";
+		$where = "";
+		$updates = [];
 		$valueColumns = array_keys($values);
 		foreach ($valueColumns as $column) {
-			$updates .= sprintf("%s%s%s = ?", $this->columnPrefix, $column, $this->columnSuffix);
+			$updates[] = sprintf("%s%s%s = ?", $this->columnPrefix, $column, $this->columnSuffix);
 		}
 		
-		$statement = "UPDATE $table SET $updates";
+		$statement = "UPDATE $table SET " . join(", ", $updates);
 		
 		if (sizeof($criteria) > 0) {
 			$whereColumns = array_keys($criteria);

@@ -4,20 +4,20 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "content-hash": "0c9e8632aef6f7a7cb1c4cf70c1930d5",
+    "content-hash": "373daf3dc9a763bf6d33c970ba1cbfdf",
     "packages": [
         {
             "name": "aura/sql",
-            "version": "3.0.0-alpha1",
+            "version": "3.0.0-beta1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/auraphp/Aura.Sql.git",
-                "reference": "b2fef25eb59baac333526cb734009088a0ee2dcf"
+                "reference": "596fc78aa20c434d5ac95a6d234ffad17f6df4a0"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/auraphp/Aura.Sql/zipball/b2fef25eb59baac333526cb734009088a0ee2dcf",
-                "reference": "b2fef25eb59baac333526cb734009088a0ee2dcf",
+                "url": "https://api.github.com/repos/auraphp/Aura.Sql/zipball/596fc78aa20c434d5ac95a6d234ffad17f6df4a0",
+                "reference": "596fc78aa20c434d5ac95a6d234ffad17f6df4a0",
                 "shasum": ""
             },
             "require": {
@@ -57,7 +57,45 @@
                 "sqlserver",
                 "sqlsrv"
             ],
-            "time": "2017-03-09T22:23:11+00:00"
+            "time": "2017-06-28T15:21:43+00:00"
+        },
+        {
+            "name": "dashifen/exception",
+            "version": "1.0.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/dashifen/exception.git",
+                "reference": "51b3679dd77147bd0e31a3071125d3a9295cd88d"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/dashifen/exception/zipball/51b3679dd77147bd0e31a3071125d3a9295cd88d",
+                "reference": "51b3679dd77147bd0e31a3071125d3a9295cd88d",
+                "shasum": ""
+            },
+            "require": {
+                "php": "^7.1"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Dashifen\\Exception\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "David Dashifen Kees",
+                    "email": "dashifen@dashifen.com",
+                    "homepage": "https://dashifen.com",
+                    "role": "developer"
+                }
+            ],
+            "description": "a base class for exceptions in Dashifen's other work",
+            "time": "2017-06-01T13:18:01+00:00"
         },
         {
             "name": "psr/log",

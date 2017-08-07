@@ -2,7 +2,9 @@
 
 namespace Dashifen\Database;
 
-class DatabaseException extends \Exception implements DatabaseExceptionInterface {
+use Dashifen\Exception\Exception;
+
+class DatabaseException extends Exception implements DatabaseExceptionInterface {
 	
 	/**
 	 * @var string $query
