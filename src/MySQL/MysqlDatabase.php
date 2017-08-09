@@ -66,9 +66,11 @@ class MysqlDatabase extends AbstractDatabase implements MysqlInterface {
 	 * @return MysqlException
 	 */
 	protected function prepareMysqlException(\Exception $databaseException, string $query, array $criteria = []): MysqlException {
+		$code = $databaseException->getCode();
+		
 		$mysqlException = new MysqlException(
 			$databaseException->getMessage(),
-			$databaseException->getCode(),
+			is_numeric($code) ? $code : 0,
 			$databaseException
 		);
 		
