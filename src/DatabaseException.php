@@ -2,7 +2,7 @@
 
 namespace Dashifen\Database;
 
-use Dashifen\Exception\Exception;
+use \exception as Exception;
 
 class DatabaseException extends Exception implements DatabaseExceptionInterface {
 	
