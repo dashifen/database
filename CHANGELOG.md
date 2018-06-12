@@ -22,3 +22,6 @@ added PHP version to composer.json
 
 ##1.0.5
 MysqlInterface extends DatabaseInterface   
+
+##1.3.0
+Updated Aura/SQL
