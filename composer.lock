@@ -4,20 +4,20 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "content-hash": "373daf3dc9a763bf6d33c970ba1cbfdf",
+    "content-hash": "e70e7384bfc02f17e67e383130e1fee7",
     "packages": [
         {
             "name": "aura/sql",
-            "version": "3.0.0-beta1",
+            "version": "3.0.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/auraphp/Aura.Sql.git",
-                "reference": "596fc78aa20c434d5ac95a6d234ffad17f6df4a0"
+                "reference": "2be02d5dfd9fdee6df199de1a19572aa490bb744"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/auraphp/Aura.Sql/zipball/596fc78aa20c434d5ac95a6d234ffad17f6df4a0",
-                "reference": "596fc78aa20c434d5ac95a6d234ffad17f6df4a0",
+                "url": "https://api.github.com/repos/auraphp/Aura.Sql/zipball/2be02d5dfd9fdee6df199de1a19572aa490bb744",
+                "reference": "2be02d5dfd9fdee6df199de1a19572aa490bb744",
                 "shasum": ""
             },
             "require": {
@@ -57,7 +57,7 @@
                 "sqlserver",
                 "sqlsrv"
             ],
-            "time": "2017-06-28T15:21:43+00:00"
+            "time": "2018-06-11T12:57:42+00:00"
         },
         {
             "name": "dashifen/exception",
@@ -194,9 +194,7 @@
     ],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": {
-        "aura/sql": 15
-    },
+    "stability-flags": [],
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
