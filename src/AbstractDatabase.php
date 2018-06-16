@@ -296,12 +296,12 @@ QUERY;
 	 * @param array  $values
 	 *
 	 * @throws DatabaseException
-	 * @return array|null
+	 * @return int
 	 *
-	 * inserts $values into $table returning the created ID or IDs.
-	 * returns null if nothing could be inserted.
+	 * inserts $values into $table returning the created ID the
+	 * number of rows inserted if $values is two-dimensional.
 	 */
-	public function insert(string $table, array $values): ?array {
+	public function insert(string $table, array $values): int {
 		
 		// this is where we start to deviate from simply changing the names of
 		// the Aura\Sql functions to match existing function calls within my other

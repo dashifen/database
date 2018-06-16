@@ -113,13 +113,14 @@ interface DatabaseInterface	{
 	/**
 	 * @param string $table
 	 * @param array  $values
-	 * @throws DatabaseException
-	 * @return array|null
 	 *
-	 * inserts $values into $table returning the created ID or IDs.
-	 * returns null if nothing could be inserted.
+	 * @throws DatabaseException
+	 * @return int
+	 *
+	 * inserts $values into $table returning the created ID the
+	 * number of rows inserted if $values is two-dimensional.
 	 */
-	public function insert(string $table, array $values): ?array;
+	public function insert(string $table, array $values): int;
 	
 	/**
 	 * @param string $table
