@@ -62,9 +62,9 @@ abstract class AbstractDatabase implements DatabaseInterface {
 	}
 	
 	/**
-	 * @return bool
-	 *
 	 * returns true if the object is connected to the database; false otherwise.
+	 *
+	 * @return bool
 	 */
 	public function isConnected(): bool {
 		return $this->dbConn->isConnected();
@@ -105,15 +105,15 @@ QUERY;
 	}
 	
 	/**
+	 * given a query, returns all of the returns the first column
+	 * for all returned rows.  returns an empty array if nothing is
+	 * selected or nothing could be selected.
+	 *
 	 * @param string $query
 	 * @param array  $criteria
 	 *
 	 * @throws DatabaseException
 	 * @return array
-	 *
-	 * given a query, returns all of the returns the first column
-	 * for all returned rows.  returns an empty array if nothing is
-	 * selected or nothing could be selected.
 	 */
 	public function getCol(string $query, array $criteria = []): array {
 		try {
@@ -125,13 +125,13 @@ QUERY;
 	}
 	
 	/**
+	 * uses the parameters to prepare one of our own exceptions and returns it.
+	 *
 	 * @param \PDOException $pdoException
 	 * @param string        $query
 	 * @param array         $criteria
 	 *
 	 * @return DatabaseException
-	 *
-	 * uses the parameters to prepare one of our own exceptions and returns it.
 	 */
 	protected function prepareDatabaseException(\PDOException $pdoException, string $query, array $criteria = []): DatabaseException {
 		$databaseException = new DatabaseException(
@@ -146,12 +146,12 @@ QUERY;
 	}
 	
 	/**
+	 * source: http://stackoverflow.com/a/12015992/360838 (accessed 2017-04-13)
+	 *
 	 * @param string $query
 	 * @param array  $criteria
 	 *
 	 * @return string
-	 *
-	 * source: http://stackoverflow.com/a/12015992/360838 (accessed 2017-04-13)
 	 */
 	public function getStatement(string $query, array $criteria = []): string {
 		
@@ -198,15 +198,15 @@ QUERY;
 	}
 	
 	/**
+	 * given a query, returns the first column of the first row.
+	 * returns null if nothing is selected or nothing could be
+	 * selected.
+	 *
 	 * @param string $query
 	 * @param array  $criteria
 	 *
 	 * @throws DatabaseException
 	 * @return mixed|null
-	 *
-	 * given a query, returns the first column of the first row.
-	 * returns null if nothing is selected or nothing could be
-	 * selected.
 	 */
 	public function getVar(string $query, array $criteria = []) {
 		try {
@@ -217,15 +217,15 @@ QUERY;
 	}
 	
 	/**
+	 * given a query, returns all columns of the first row returned.
+	 * returns an empty array if nothing is selected or nothing could
+	 * be selected.
+	 *
 	 * @param string $query
 	 * @param array  $criteria
 	 *
 	 * @throws DatabaseException
 	 * @return array
-	 *
-	 * given a query, returns all columns of the first row returned.
-	 * returns an empty array if nothing is selected or nothing could
-	 * be selected.
 	 */
 	public function getRow(string $query, array $criteria = []): array {
 		try {
@@ -237,15 +237,15 @@ QUERY;
 	}
 	
 	/**
+	 * given a query, returns an array indexed by the first column and
+	 * containing the subsequent columns as the values.  returns an
+	 * empty array if nothing is selected or could be selected
+	 *
 	 * @param string $query
 	 * @param array  $criteria
 	 *
 	 * @throws DatabaseException
 	 * @return array
-	 *
-	 * given a query, returns an array indexed by the first column and
-	 * containing the subsequent columns as the values.  returns an
-	 * empty array if nothing is selected or could be selected
 	 */
 	public function getMap(string $query, array $criteria = []): array {
 		try {
@@ -273,14 +273,14 @@ QUERY;
 	}
 	
 	/**
+	 * returns an array of all results selected or an empty array if nothing
+	 * was selected or nothing could be selected.
+	 *
 	 * @param string $query
 	 * @param array  $criteria
 	 *
 	 * @throws DatabaseException
 	 * @return array
-	 *
-	 * returns an array of all results selected or an empty array if nothing
-	 * was selected or nothing could be selected.
 	 */
 	public function getResults(string $query, array $criteria = []): array {
 		try {
@@ -292,14 +292,14 @@ QUERY;
 	}
 	
 	/**
+	 * inserts $values into $table returning the created ID the
+	 * number of rows inserted if $values is two-dimensional.
+	 *
 	 * @param string $table
 	 * @param array  $values
 	 *
 	 * @throws DatabaseException
 	 * @return int
-	 *
-	 * inserts $values into $table returning the created ID the
-	 * number of rows inserted if $values is two-dimensional.
 	 */
 	public function insert(string $table, array $values): int {
 		
@@ -310,23 +310,26 @@ QUERY;
 		// it's an array of arrays, then we do multiples.
 		
 		try {
-			return isset($values[0]) && is_array($values[0])
+			$inserted = isset($values[0]) && is_array($values[0])
 				? $this->insertMultiple($table, $values)
 				: $this->insertSingle($table, $values);
+
+			return !is_numeric($inserted) ? sizeof($inserted) : $inserted;
 		} catch (\PDOException $pdoException) {
 			throw $this->prepareDatabaseException($pdoException, $table, $values);
 		}
 	}
-	
+
 	/**
+	 * used when inserting multiple rows into the database in a single query.
+	 * more complex than inserting a single row multiple times, but some tests
+	 * online indicate this is faster.
+	 *
 	 * @param string $table
 	 * @param array  $values
 	 *
 	 * @return mixed|null
-	 *
-	 * used when inserting multiple rows into the database in a single query.
-	 * more complex than inserting a single row multiple times, but some tests
-	 * online indicate this is faster.
+	 * @throws DatabaseException
 	 */
 	protected function insertMultiple(string $table, array $values): ?array {
 		
@@ -407,15 +410,15 @@ QUERY;
 	}
 	
 	/**
+	 * returns a string appropriate for use within a statement as the
+	 * placeholders for a series of bound values.  e.g., for a count of 3,
+	 * returns (?, ?, ?).
+	 *
 	 * @param int    $count
 	 * @param string $placeholder
 	 * @param bool   $surround
 	 *
 	 * @return string
-	 *
-	 * returns a string appropriate for use within a statement as the
-	 * placeholders for a series of bound values.  e.g., for a count of 3,
-	 * returns (?, ?, ?).
 	 */
 	protected function placeholders(int $count, string $placeholder = '?', bool $surround = true): string {
 		$temp = join(", ", array_pad([], $count, $placeholder));
@@ -431,10 +434,8 @@ QUERY;
 	 * @param string $statement
 	 * @param array  $values
 	 *
-	 * @throws DatabaseException
 	 * @return array|null
 	 */
-	
 	protected function insertExecute(string $statement, array $values): ?array {
 		
 		// our insert method should return either a single ID or a list of created IDs.
@@ -465,26 +466,26 @@ QUERY;
 	}
 	
 	/**
-	 * @param  string $name
-	 *
-	 * @return int
-	 *
 	 * returns the ID of the most recently inserted row; name is unlikely
 	 * to be necessary, according to the Aura\Sql docs, but it's important
 	 * for some DB systems, e.g. PostgreSQL.
+	 *
+	 * @param  string $name
+	 *
+	 * @return int
 	 */
 	public function getInsertedId(string $name = null): int {
 		return $this->dbConn->lastInsertId($name);
 	}
-	
+
 	/**
-	 * @param array[] ...$arrays
-	 *
-	 * @return array
-	 *
 	 * merges the list of arrays it receives from the calling scope into a
 	 * single array adding each value sequentially without overriding keys or
 	 * other such problems.
+	 *
+	 * @param array ...$arrays
+	 *
+	 * @return array
 	 */
 	protected function mergeBindings(array ...$arrays): array {
 		
@@ -502,14 +503,14 @@ QUERY;
 		
 		return $bindings;
 	}
-	
+
 	/**
+	 * produces a SQL query using the parameters
+	 *
 	 * @param string $table
 	 * @param array  $values
 	 *
 	 * @return mixed|null
-	 *
-	 * produces a SQL query using the parameters
 	 */
 	protected function insertSingle(string $table, array $values): ?array {
 		
@@ -522,15 +523,15 @@ QUERY;
 	}
 	
 	/**
-	 * @param string $table
-	 * @param array  $values
-	 *
-	 * @return string
-	 *
 	 * as the mysql implementation of this object includes an upsert query
 	 * which begins with teh same syntax as our insert here, this method builds
 	 * the insert and returns it.  this allows us to use the same logic for both
 	 * the general insert query as well as the mysql specific upsert one.
+	 *
+	 * @param string $table
+	 * @param array  $values
+	 *
+	 * @return string
 	 */
 	protected function insertBuild(string $table, array $values): string {
 		
@@ -547,15 +548,15 @@ QUERY;
 	}
 	
 	/**
+	 * updates $values within $table based on $criteria.  returns the
+	 * number of rows changed by the update (including zero).
+	 *
 	 * @param string $table
 	 * @param array  $values
 	 * @param array  $criteria
 	 *
 	 * @throws DatabaseException
 	 * @return int
-	 *
-	 * updates $values within $table based on $criteria.  returns the
-	 * number of rows changed by the update (including zero).
 	 */
 	public function update(string $table, array $values, array $criteria = []): int {
 		
@@ -596,14 +597,14 @@ QUERY;
 	}
 	
 	/**
+	 * deletes from $table based on $criteria.  returns the number of
+	 * rows deleted (including zero).
+	 *
 	 * @param string $table
 	 * @param array  $criteria
 	 *
 	 * @throws DatabaseException
 	 * @return int
-	 *
-	 * deletes from $table based on $criteria.  returns the number of
-	 * rows deleted (including zero).
 	 */
 	public function delete(string $table, array $criteria = []): int {
 		
@@ -636,17 +637,17 @@ QUERY;
 	}
 	
 	/**
-	 * @param string $query
-	 * @param array  $criteria
-	 *
-	 * @throws DatabaseException
-	 * @return bool
-	 *
 	 * sometimes, the above helper functions aren't enough.  this method
 	 * runs the given query using the criteria and returns true if it worked
 	 * and false otherwise.  note:  this will not return the results of a
 	 * SELECT query; it's meant more for things like an INSERT INTO SELECT FROM
 	 * style query that won't quite work using the insert method above.
+	 *
+	 * @param string $query
+	 * @param array  $criteria
+	 *
+	 * @throws DatabaseException
+	 * @return bool
 	 */
 	public function runQuery(string $query, array $criteria = []): bool {
 		
