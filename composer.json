@@ -17,9 +17,9 @@
 	],
 	"license": "MIT",
 	"require": {
-		"php": ">=7.3.*",
-		"aura/sql": "3.0.*",
-		"dashifen/exception": "1.1.*",
+		"php": ">=8.4",
+		"aura/sql": "^5.0",
+		"dashifen/exception": "^1.0",
 		"ext-pdo": "*"
 	},
 	"autoload": {
