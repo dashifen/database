@@ -18,7 +18,7 @@
 	"license": "MIT",
 	"require": {
 		"php": ">=8.4",
-		"aura/sql": "^5.0",
+		"aura/sql": "6.x-dev",
 		"dashifen/exception": "^1.0",
 		"ext-pdo": "*"
 	},
@@ -26,8 +26,5 @@
 		"psr-4": {
 			"Dashifen\\Database\\": "src/"
 		}
-	},
-	"require-dev": {
-		"league/booboo": "^1.0"
 	}
 }

@@ -35,14 +35,18 @@ abstract class AbstractDatabase implements DatabaseInterface
     array $queries = [],
     ?ProfilerInterface $profiler = null
   ) {
-    if ($this->db->isConnected()) {
+    // the first time we get here, the db property won't be set.  if we tried
+    // to access it to see if it's connected, we'd create an error.  therefore,
+    // we see if it is set, and then test if it's connected.  if both of these
+    // criteria are met, we'll quick disconnect from the current database
+    // before connecting to the next one.
+    
+    if (isset($this->db) && $this->db->isConnected()) {
       $this->db->disconnect();
     }
     
-    $this->db = new ExtendedPdo($dsn, $username, $password, $options,
-      $queries, $profiler);
+    $this->db = ExtendedPdo::connect(...func_get_args());
     
-    $this->db->connect();
     if (!$this->db->isConnected()) {
       throw new DatabaseException('Unable to connect to database.');
     }
